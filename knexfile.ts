@@ -1,12 +1,11 @@
 export default {
-  client: 'better-sqlite3',
+  client: 'sqlite3',
   connection: {
     filename: './src/database/database.db',
   },
   pool: {
     afterCreate: (connection: any, done: any) => {
-      connection.pragma('foreign_keys = ON');
-      done();
+      connection.run('PRAGMA foreign_keys = ON', done);
     },
   },
   useNullAsDefault: true,
