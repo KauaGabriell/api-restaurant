@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 import { knex } from '../database/knex';
-import { AppError } from '@/utils/AppError';
+
 
 class ProductController {
   async index(req: Request, res: Response, next: NextFunction) {
@@ -20,7 +20,8 @@ class ProductController {
       });
       const product = bodySchema.parse(req.body);
 
-      await knex('products').insert(product);
+      await knex<ProductRepository>('products').insert(product);
+      
       return res.status(201).json(product);
     } catch (e: any) {
       return res.status(400).json({ message: e.message });
