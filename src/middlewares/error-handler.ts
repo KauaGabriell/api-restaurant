@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AppError } from '@/utils/AppError';
 import { ZodError } from 'zod';
 
@@ -21,5 +21,5 @@ export function errorHandler(
       });
   }
 
-  return response.status(500).json({ message: error.message });
+  return res.status(500).json({ message: error.message });
 }
