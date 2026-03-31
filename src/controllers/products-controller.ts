@@ -2,13 +2,30 @@ import { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 import { knex } from '../database/knex';
 
-
 class ProductController {
   async index(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.json();
-    } catch (error) {
-      next(error);
+      const { name } = req.query;
+      console.log(name);
+      const query = knex<ProductRepository>('products')
+        .select()
+        .orderBy('name');
+
+      if (name) {
+        query.whereLike('name', `%${name ?? ''}%`);
+      }
+
+      const products = await query;
+
+      if (products.length === 0) {
+        return res
+          .status(404)
+          .json({ message: 'Não foi encontrado nenhum produto!' });
+      }
+
+      return res.status(200).json(products);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
     }
   }
 
@@ -21,7 +38,7 @@ class ProductController {
       const product = bodySchema.parse(req.body);
 
       await knex<ProductRepository>('products').insert(product);
-      
+
       return res.status(201).json(product);
     } catch (e: any) {
       return res.status(400).json({ message: e.message });
