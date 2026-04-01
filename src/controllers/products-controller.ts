@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 import { knex } from '../database/knex';
+import { AppError } from '@/utils/AppError';
 
 class ProductController {
   async index(req: Request, res: Response, next: NextFunction) {
@@ -18,18 +19,16 @@ class ProductController {
       const products = await query;
 
       if (products.length === 0) {
-        return res
-          .status(404)
-          .json({ message: 'Não foi encontrado nenhum produto!' });
+        throw new AppError('Não foi encontrado nenhum produto!', 404);
       }
 
       return res.status(200).json(products);
     } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      return next(error);
     }
   }
 
-  async createProduct(req: Request, res: Response) {
+  async createProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const bodySchema = z.object({
         name: z.string().trim().min(4),
@@ -41,11 +40,11 @@ class ProductController {
 
       return res.status(201).json(product);
     } catch (e: any) {
-      return res.status(400).json({ message: e.message });
+      return next(e);
     }
   }
 
-  async updateProduct(req: Request, res: Response) {
+  async updateProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const id = z
         .string()
@@ -65,16 +64,16 @@ class ProductController {
         .where({ id: id });
 
       if (updatedRows === 0) {
-        return res.status(404).json({ message: 'Produto não encontrado!' });
+        throw new AppError('Produto não encontrado!', 404);
       }
 
       return res.status(200).json({ name, price });
     } catch (error: any) {
-      return res.status(404).json({ message: error.message });
+      return next(error);
     }
   }
 
-  async removeProdcut(req: Request, res: Response) {
+  async removeProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const id = z
         .string()
@@ -82,18 +81,17 @@ class ProductController {
         .refine((value) => !isNaN(value), { message: 'Id must be a number' })
         .parse(req.params.id);
 
-      const product = await knex<ProductRepository>('products')
-        .select()
-        .where({ id })
-        .first();
+      const deletedRows = await knex<ProductRepository>('products')
+        .delete()
+        .where({ id });
 
-      if (!product) {
-        return res.status(404).json({ message: 'Produto não encontrado!' });
+      if (deletedRows === 0) {
+        throw new AppError('Produto não encontrado!', 404);
       }
 
       return res.status(200).json({ message: 'Produto deletado com sucesso' });
     } catch (error: any) {
-      return res.status(404).json({ message: error.message });
+      return next(error);
     }
   }
 }
