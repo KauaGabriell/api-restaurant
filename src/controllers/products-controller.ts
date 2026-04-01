@@ -6,7 +6,7 @@ class ProductController {
   async index(req: Request, res: Response, next: NextFunction) {
     try {
       const { name } = req.query;
-      
+
       const query = knex<ProductRepository>('products')
         .select()
         .orderBy('name');
@@ -60,9 +60,14 @@ class ProductController {
 
       const { name, price } = bodySchema.parse(req.body);
 
-      await knex<ProductRepository>('products')
+      const updatedRows = await knex<ProductRepository>('products')
         .update({ name, price, updated_at: knex.fn.now() })
-        .where({ id });
+        .where({ id: id });
+
+      if (updatedRows === 0) {
+        return res.status(404).json({ message: 'Produto não encontrado!' });
+      }
+
       return res.status(200).json({ name, price });
     } catch (error: any) {
       return res.status(404).json({ message: error.message });
