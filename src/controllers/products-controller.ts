@@ -73,6 +73,29 @@ class ProductController {
       return res.status(404).json({ message: error.message });
     }
   }
+
+  async removeProdcut(req: Request, res: Response) {
+    try {
+      const id = z
+        .string()
+        .transform((value) => Number(value))
+        .refine((value) => !isNaN(value), { message: 'Id must be a number' })
+        .parse(req.params.id);
+
+      const product = await knex<ProductRepository>('products')
+        .select()
+        .where({ id })
+        .first();
+
+      if (!product) {
+        return res.status(404).json({ message: 'Produto não encontrado!' });
+      }
+
+      return res.status(200).json({ message: 'Produto deletado com sucesso' });
+    } catch (error: any) {
+      return res.status(404).json({ message: error.message });
+    }
+  }
 }
 
 export { ProductController };
