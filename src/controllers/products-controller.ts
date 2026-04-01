@@ -6,7 +6,7 @@ class ProductController {
   async index(req: Request, res: Response, next: NextFunction) {
     try {
       const { name } = req.query;
-      // console.log(name);
+      
       const query = knex<ProductRepository>('products')
         .select()
         .orderBy('name');
