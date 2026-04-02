@@ -53,6 +53,38 @@ class TableSessionController {
       next(error);
     }
   }
+
+  async updateSession(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = z
+        .string()
+        .transform((value) => Number(value))
+        .refine((value) => !isNaN(value), { message: 'Id must be a number' })
+        .parse(req.params.id);
+
+      const session = await knex<TableSessionRepository>('tables_sessions')
+        .where({ id })
+        .first();
+
+      if (!session) throw new AppError('This session table not exist');
+
+      if (session?.closed_at)
+        throw new AppError('This table session is closed');
+
+      const [updatedSession] = await knex<TableSessionRepository>(
+        'tables_sessions',
+      )
+        .update({
+          closed_at: knex.fn.now(),
+        })
+        .where({ id })
+        .returning('*');
+
+      return res.status(200).json({ updatedSession });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export { TableSessionController };
