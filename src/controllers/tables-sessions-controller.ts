@@ -6,7 +6,15 @@ import { AppError } from '@/utils/AppError';
 class TableSessionController {
   async index(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.json({ message: 'Ok - Testando' });
+      const sessions = await knex<TableSessionRepository>('tables_sessions')
+        .select()
+        .orderBy('closed_at')
+        .returning('*');
+
+      if (!sessions)
+        throw new AppError('Não foi encontrada nenhuma mesa aberta');
+
+      return res.status(200).json({ sessions });
     } catch (error) {
       next(error);
     }
