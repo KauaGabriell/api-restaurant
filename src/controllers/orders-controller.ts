@@ -11,9 +11,6 @@ class OrderController {
         .transform((value) => Number(value))
         .parse(req.params.table_session_id);
 
-      console.log(table_session_id);
-      console.log(typeof table_session_id);
-
       const orders = await knex<OrderRepository>('orders')
         .select(
           'orders.id',
@@ -70,6 +67,26 @@ class OrderController {
       });
 
       return res.status(201).json({ message: 'order successful ' });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async show(req: Request, res: Response, next: NextFunction) {
+    try {
+      const table_session_id = z
+        .string()
+        .transform((value) => Number(value))
+        .parse(req.params.table_session_id);
+
+      const totalOrder = await knex<OrderRepository>('orders')
+        .select(
+          knex.raw('COALESCE(SUM(orders.price * orders.quantity), 0) AS Total'),
+          knex.raw('COALESCE(SUM(orders.quantity), 0) AS quantity'),
+        )
+        .where({ table_session_id })
+        .first();
+
+      return res.status(200).json(totalOrder);
     } catch (error) {
       next(error);
     }
