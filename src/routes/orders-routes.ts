@@ -4,7 +4,7 @@ import { OrderController } from '@/controllers/orders-controller';
 const ordersRoutes = Router();
 const orderController = new OrderController();
 
-ordersRoutes.get('/', orderController.index);
 ordersRoutes.post('/', orderController.createOrder);
+ordersRoutes.get('/table-sessions/:table_session_id', orderController.index);
 
 export { ordersRoutes };

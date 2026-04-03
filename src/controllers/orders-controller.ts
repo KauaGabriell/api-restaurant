@@ -1,12 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import { number, z } from 'zod';
 import { knex } from '../database/knex';
 import { AppError } from '@/utils/AppError';
 
 class OrderController {
   async index(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.status(200).json({ message: 'testando' });
+      const table_session_id = z
+        .string()
+        .transform((value) => Number(value))
+        .parse(req.params.table_session_id);
+
+      console.log(table_session_id);
+      console.log(typeof table_session_id);
+
+      const orders = await knex<OrderRepository>('orders')
+        .select(
+          'orders.id',
+          'orders.table_session_id',
+          'product_id',
+          'products.name',
+          'orders.price',
+          'orders.quantity',
+          knex.raw('(orders.price * orders.quantity) as Total'),
+          'orders.created_at',
+          'orders.updated_at',
+        )
+        .join('products', 'products.id', 'orders.product_id')
+        .where({ table_session_id })
+        .orderBy('orders.created_at', 'desc');
+
+      return res.status(200).json({ orders });
     } catch (error) {
       next(error);
     }
